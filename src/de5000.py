@@ -1,10 +1,10 @@
-'''
+"""
 Created on Sep 15, 2017
 
 @author: 4x1md
 
 Serial port settings: 9600 8N1 DTR=1 RTS=0
-'''
+"""
 
 import serial
 
@@ -159,6 +159,11 @@ NORMALIZE_RULES = {
 
 class DE5000(object):
     def __init__(self, port):
+        """ Initialize object
+
+        Parameters:
+            port (str): E.g. '/dev/ttyUSB0'
+        """
         self._port = port
         self._ser = serial.Serial(self._port, BAUD_RATE, BITS, PARITY, STOP_BITS, timeout=TIMEOUT)
         self._ser.setDTR(True)
@@ -167,7 +172,7 @@ class DE5000(object):
         self._ser.open()
 
     def read_raw_data(self):
-        '''Reads a new data packet from serial port.
+        """ Reads a new data packet from serial port.
         If the packet was valid returns array of integers.
         if the packet was not valid returns empty array.
 
@@ -177,11 +182,15 @@ class DE5000(object):
         If the first received packet contains less than 17 bytes, it is
         not complete and the reading is done again. Maximum number of
         retries is defined by READ_RETRIES value.
-        '''
+
+        Returns:
+            list: List of bytes
+        """
         self._ser.reset_input_buffer()
 
         retries = 0
         while retries < READ_RETRIES:
+            # @var raw_data: bytes
             raw_data = self._ser.read_until(EOL, RAW_DATA_LENGTH)
             # If 17 bytes were read, the packet is valid and the loop ends.
             if len(raw_data) == RAW_DATA_LENGTH:
@@ -194,10 +203,16 @@ class DE5000(object):
         return res
 
     def is_data_valid(self, raw_data):
-        '''Checks data validity:
-        1. 17 bytes long
-        2. Header bytes 0x00 0x0D
-        3. Footer bytes 0x0D 0x0A'''
+        """ Checks data validity:
+            - 17 bytes long
+            - Header bytes 0x00 0x0D
+            - Footer bytes 0x0D 0x0A
+
+        Parameters:
+            raw_data (bytes)
+        Returns:
+            bool
+        """
         # Data length
         if len(raw_data) != RAW_DATA_LENGTH:
             return False
@@ -213,13 +228,21 @@ class DE5000(object):
         return True
 
     def read_hex_str_data(self):
-        '''Returns raw data represented as string with hexadecimal values.'''
+        """ Read raw data represented as string with hexadecimal values
+
+        Returns:
+            str
+        """
         data = self.read_raw_data()
         codes = ["0x%02X" % c for c in data]
         return " ".join(codes)
 
     def get_meas(self):
-        '''Returns received measurement as dictionary'''
+        """ Get received measurement as dictionary
+
+        Returns:
+            dict
+        """
         res = MEAS_RES.copy()
 
         if self._ser.isOpen():
@@ -350,17 +373,26 @@ class DE5000(object):
         return res
 
     def normalize_val(self, val, units):
-        '''Normalizes measured value to standard units. Resistance
+        """ Normalizes measured value to standard units. Resistance
         is normalized to Ohm, capacitance to Farad and inductance
-        to Henry. Other units are not changed.'''
+        to Henry. Other units are not changed.
+
+        Parameters:
+            val (float)
+            units (str)
+        Returns:
+            Tuple
+        """
         val = val * NORMALIZE_RULES[units][0]
         units = NORMALIZE_RULES[units][1]
         return (val, units)
 
     def pretty_print(self, disp_norm_val = False):
-        '''Prints measurement details in pretty print.
-        disp_norm_val: if True, normalized values will also be displayed.
-        '''
+        """ Prints measurement details in pretty print.
+
+        Parameters:
+            disp_norm_val (bool): if True, normalized values will also be displayed
+        """
         data = self.get_meas()
 
         if data['data_valid'] == False:

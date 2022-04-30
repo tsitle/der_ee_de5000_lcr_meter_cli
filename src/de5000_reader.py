@@ -1,8 +1,8 @@
-'''
+"""
 Created on Sep 15, 2017
 
 @author: 4x1md
-'''
+"""
 
 from de5000 import DE5000
 import sys
@@ -13,7 +13,7 @@ from serial import SerialException
 PORT = "/dev/ttyUSB0"
 SLEEP_TIME = 1.0
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         if len(sys.argv) > 1:
             port = sys.argv[1]
