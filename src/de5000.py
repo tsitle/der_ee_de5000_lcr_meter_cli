@@ -16,7 +16,7 @@ PARITY = serial.PARITY_NONE
 STOP_BITS = serial.STOPBITS_ONE
 TIMEOUT = 1
 # Data packet ends with CR LF (\r \n) characters
-EOL = b'\x0D\x0A'
+EOL = b"\x0D\x0A"
 RAW_DATA_LENGTH = 17
 READ_RETRIES = 3
 
@@ -41,12 +41,12 @@ PARALLEL = 0b10000000
 
 # Byte 0x03 bits 5-7: Frequency
 FREQ = [
-		'100 Hz',
-		'120 Hz',
-		'1 KHz',
-		'10 KHz',
-		'100 KHz',
-		'DC'
+		"100 Hz",
+		"120 Hz",
+		"1 KHz",
+		"10 KHz",
+		"100 KHz",
+		"DC"
 	]
 
 # Byte 0x04: tolerance
@@ -54,111 +54,111 @@ TOLERANCE = [
 		None,
 		None,
 		None,
-		'+-0.25%',
-		'+-0.5%',
-		'+-1%',
-		'+-2%',
-		'+-5%',
-		'+-10%',
-		'+-20%',
-		'-20+80%'
+		"+-0.25%",
+		"+-0.5%",
+		"+-1%",
+		"+-2%",
+		"+-5%",
+		"+-10%",
+		"+-20%",
+		"-20+80%"
 	]
 
 # Byte 0x05: primary measured quantity (serial and parallel mode)
-MEAS_QUANTITY_SER = [None, 'Ls', 'Cs', 'Rs', 'DCR']
-MEAS_QUANTITY_PAR = [None, 'Lp', 'Cp', 'Rp', 'DCR']
+MEAS_QUANTITY_SER = [None, "Ls", "Cs", "Rs", "DCR"]
+MEAS_QUANTITY_PAR = [None, "Lp", "Cp", "Rp", "DCR"]
 
 # Bytes 0x08, 0x0D bits 3-7: Units
 MAIN_UNITS = [
-		'',
-		'Ohm',
-		'kOhm',
-		'MOhm',
+		"",
+		"Ohm",
+		"kOhm",
+		"MOhm",
 		None,
-		'uH',
-		'mH',
-		'H',
-		'kH',
-		'pF',
-		'nF',
-		'uF',
-		'mF',
-		'%',
-		'deg',
+		"uH",
+		"mH",
+		"H",
+		"kH",
+		"pF",
+		"nF",
+		"uF",
+		"mF",
+		"%",
+		"deg",
 		None, None, None, None, None, None
 	]
 
 # Bytes 0x09, 0x0E bits 0-3: Measurement display status
 STATUS = [
-		'normal',
-		'blank',
-		'----',
-		'OL',
+		"normal",
+		"blank",
+		"----",
+		"OL",
 		None,
 		None,
 		None,
-		'PASS',
-		'FAIL',
-		'OPEn',
-		'Srt'
+		"PASS",
+		"FAIL",
+		"OPEn",
+		"Srt"
 	]
 
 # Byte 0x0a: secondary measured quantity
 SEC_QUANTITY = [
 		None,
-		'D',
-		'Q',
-		'ESR',
-		'Theta'
+		"D",
+		"Q",
+		"ESR",
+		"Theta"
 	]
-RP = 'RP'
+RP = "RP"
 
 # Output format
 MEAS_RES = {
-		'main_quantity': None,
-		'main_val': None,
-		'main_units': None,
-		'main_status': None,
-		'main_norm_val': None,
-		'main_norm_units': None,
+		"main_quantity": None,
+		"main_val": None,
+		"main_units": None,
+		"main_status": None,
+		"main_norm_val": None,
+		"main_norm_units": None,
 
-		'sec_quantity': None,
-		'sec_val': None,
-		'sec_units': None,
-		'sec_status': None,
-		'sec_norm_val': None,
-		'sec_norm_units': None,
+		"sec_quantity": None,
+		"sec_val": None,
+		"sec_units": None,
+		"sec_status": None,
+		"sec_norm_val": None,
+		"sec_norm_units": None,
 
-		'freq': None,
-		'tolerance': None,
-		'ref_shown': False,
-		'delta_mode': False,
-		'cal_mode': False,
-		'sorting_mode': False,
-		'lcr_auto': False,
-		'auto_range': False,
-		'parallel': False,
+		"freq": None,
+		"tolerance": None,
+		"ref_shown": False,
+		"delta_mode": False,
+		"cal_mode": False,
+		"sorting_mode": False,
+		"lcr_auto": False,
+		"auto_range": False,
+		"parallel": False,
 
-		'data_valid': False
+		"data_valid": False
 	}
 
 # Normalization constants
 # Each value contains multiplier and target value
 NORMALIZE_RULES = {
-		'':     (1, ''),
-		'Ohm':  (1, 'Ohm'),
-		'kOhm': (1E3, 'Ohm'),
-		'MOhm': (1E6, 'Ohm'),
-		'uH':   (1E-6, 'H'),
-		'mH':   (1E-3, 'H'),
-		'H':    (1, 'H'),
-		'kH':   (1E3, 'H'),
-		'pF':   (1E-12, 'F'),
-		'nF':   (1E-9, 'F'),
-		'uF':   (1E-6, 'F'),
-		'mF':   (1E-3, 'F'),
-		'%':    (1, '%'),
-		'deg':  (1, 'deg')
+		"":     (1, ""),
+		"Ohm":  (1, "Ohm"),
+		"kOhm": (1E3, "Ohm"),
+		"MOhm": (1E6, "Ohm"),
+		"uH":   (1E-6, "H"),
+		"mH":   (1E-3, "H"),
+		"H":    (1, "H"),
+		"kH":   (1E3, "H"),
+		"pF":   (1E-12, "F"),
+		"nF":   (1E-9, "F"),
+		"uF":   (1E-6, "F"),
+		"mF":   (1E-3, "F"),
+		"%":    (1, "%"),
+		"deg":  (1, "deg")
 	}
 
 
@@ -270,7 +270,7 @@ class DE5000(object):
 
 		# If raw data is empty, return
 		if len(raw_data) == 0:
-			res['data_valid'] = False
+			res["data_valid"] = False
 			self._errCount += 1
 			return res
 		self._succCount += 1
@@ -279,116 +279,116 @@ class DE5000(object):
 		val = raw_data[0x03]
 		val &= 0b11100000
 		val = val >> 5
-		res['freq'] = FREQ[val]
+		res["freq"] = FREQ[val]
 
 		# Reference shown
 		val = raw_data[0x02]
 		val &= REF_SHOWN
-		res['ref_shown'] = True if val else False
+		res["ref_shown"] = True if val else False
 
 		# Delta mode
 		val = raw_data[0x02]
 		val &= DELTA
-		res['delta_mode'] = True if val else False
+		res["delta_mode"] = True if val else False
 
 		# Calibration mode
 		val = raw_data[0x02]
 		val &= CAL
-		res['cal_mode'] = True if val else False
+		res["cal_mode"] = True if val else False
 
 		# Sorting mode
 		val = raw_data[0x02]
 		val &= SORTING
-		res['sorting_mode'] = True if val else False
+		res["sorting_mode"] = True if val else False
 
 		# LCR AUTO mode
 		val = raw_data[0x02]
 		val &= LCR_AUTO
-		res['lcr_auto'] = True if val else False
+		res["lcr_auto"] = True if val else False
 
 		# Auto range
 		val = raw_data[0x02]
 		val &= AUTO_RANGE
-		res['auto_range'] = True if val else False
+		res["auto_range"] = True if val else False
 
 		# Parallel measurement
 		val = raw_data[0x02]
 		val &= PARALLEL
-		res['parallel'] = True if val else False
+		res["parallel"] = True if val else False
 
 		# Main measurement
 		# Status
 		val = raw_data[0x09]
 		val &= 0b00001111
-		res['main_status'] = STATUS[val]
+		res["main_status"] = STATUS[val]
 
 		# Quantity
 		val = raw_data[0x05]
-		if res['parallel']:
-			res['main_quantity'] = MEAS_QUANTITY_PAR[val]
+		if res["parallel"]:
+			res["main_quantity"] = MEAS_QUANTITY_PAR[val]
 		else:
-			res['main_quantity'] = MEAS_QUANTITY_SER[val]
+			res["main_quantity"] = MEAS_QUANTITY_SER[val]
 
 		# Value
 		val = raw_data[0x06] * 0x100 + raw_data[0x07]
 		mul = raw_data[0x08]
 		mul &= 0b00000111
 		val = val * 10**-mul
-		res['main_val'] = val
+		res["main_val"] = val
 
 		# Units
 		val = raw_data[0x08]
 		val &= 0b11111000
 		val = val >> 3
-		res['main_units'] = MAIN_UNITS[val]
+		res["main_units"] = MAIN_UNITS[val]
 
 		# Normalize value
-		nval = self.normalize_val(res['main_val'], res['main_units'])
-		res['main_norm_val'] = nval[0]
-		res['main_norm_units'] = nval[1]
+		nval = self.normalize_val(res["main_val"], res["main_units"])
+		res["main_norm_val"] = nval[0]
+		res["main_norm_units"] = nval[1]
 
 		# Secondary measurement
 		# Status
 		val = raw_data[0x0E]
 		val &= 0b00000111
-		res['sec_status'] = STATUS[val]
+		res["sec_status"] = STATUS[val]
 
 		# Quantity
 		val = raw_data[0x0A]
-		if res['parallel'] and val == 0x03:
-			res['sec_quantity'] = RP
+		if res["parallel"] and val == 0x03:
+			res["sec_quantity"] = RP
 		else:
-			res['sec_quantity'] = SEC_QUANTITY[val]
+			res["sec_quantity"] = SEC_QUANTITY[val]
 
 		# Units
 		val = raw_data[0x0D]
 		val &= 0b11111000
 		val = val >> 3
-		res['sec_units'] = MAIN_UNITS[val]
+		res["sec_units"] = MAIN_UNITS[val]
 
 		# Value
 		val = raw_data[0x0B] * 0x100 + raw_data[0x0C]
-		'''If units are % or deg, the value may be negative which is
+		"""If units are % or deg, the value may be negative which is
 		represented in two's complement form.
 		In this case if the highest bit is 1, the value should be converted
-		to negative bu substracting it from 0x10000.'''
-		if res['sec_units'] in ('%', 'deg') and val & 0x1000:
+		to negative bu substracting it from 0x10000."""
+		if res["sec_units"] in ("%", "deg") and val & 0x1000:
 			val = val - 0x10000
 		mul = raw_data[0x0D]
 		mul &= 0b00000111
 		val = val * 10**-mul
-		res['sec_val'] = val
+		res["sec_val"] = val
 
 		# Normalize value
-		nval = self.normalize_val(res['sec_val'], res['sec_units'])
-		res['sec_norm_val'] = nval[0]
-		res['sec_norm_units'] = nval[1]
+		nval = self.normalize_val(res["sec_val"], res["sec_units"])
+		res["sec_norm_val"] = nval[0]
+		res["sec_norm_units"] = nval[1]
 
 		# Tolerance
 		val = raw_data[0x04]
-		res['tolerance'] = TOLERANCE[val]
+		res["tolerance"] = TOLERANCE[val]
 
-		res['data_valid'] = True
+		res["data_valid"] = True
 
 		return res
 
@@ -415,7 +415,7 @@ class DE5000(object):
 		"""
 		data = self.get_meas()
 
-		if data['data_valid'] == False:
+		if data["data_valid"] == False:
 			print(f"DE-5000 is not connected or data was corrupted. (Packets: {self._errCount} invalid, {self._succCount} OK)")
 			return
 
@@ -424,63 +424,63 @@ class DE5000(object):
 		print(f"ErrRate: {self._errCount}/{tmpTotalPacks}={tmpErrPerc:.01f}%")
 
 		# In calibration mode frequency is not displayed.
-		if data['cal_mode']:
+		if data["cal_mode"]:
 			print("Calibration")
 		else:
-			if data['sorting_mode']:
-				print("SORTING Tol %s" % data['tolerance'])
-			print("Frequency: %s" % data['freq'])
+			if data["sorting_mode"]:
+				print("SORTING Tol %s" % data["tolerance"])
+			print("Frequency: %s" % data["freq"])
 
 		# LCR autodetection mode
-		if data['lcr_auto']:
+		if data["lcr_auto"]:
 			print("LCR AUTO")
 
 		# Auto range
-		if data['auto_range']:
+		if data["auto_range"]:
 			print("AUTO RNG")
 
 		# Delta mode parameters
-		if data['delta_mode']:
-			if data['ref_shown']:
+		if data["delta_mode"]:
+			if data["ref_shown"]:
 				print("DELTA Ref")
 			else:
 				print("DELTA")
 
 		# Main display
-		if data['main_status'] == 'normal':
-			print("%s = %s %s" % (data['main_quantity'], data['main_val'], data['main_units']))
-		elif data['main_status'] == 'blank':
+		if data["main_status"] == "normal":
+			print("%s = %s %s" % (data["main_quantity"], data["main_val"], data["main_units"]))
+		elif data["main_status"] == "blank":
 			print("")
 		else:
-			print(data['main_status'])
+			print(data["main_status"])
 
 		# Secondary display
-		if data['sec_status'] == 'normal':
-				if data['sec_quantity'] is not None:
-					print("%s = %s %s" % (data['sec_quantity'], data['sec_val'], data['sec_units']))
+		if data["sec_status"] == "normal":
+				if data["sec_quantity"] is not None:
+					print("%s = %s %s" % (data["sec_quantity"], data["sec_val"], data["sec_units"]))
 				else:
-					print("%s %s" % (data['sec_val'], data['sec_units']))
-		elif data['sec_status'] == 'blank':
+					print("%s %s" % (data["sec_val"], data["sec_units"]))
+		elif data["sec_status"] == "blank":
 			print("")
 		else:
-			print(data['sec_status'])
+			print(data["sec_status"])
 
 		# Display normalized values
 		# If measurement status is not normal, ---- will be displayed.
 		if disp_norm_val:
-			if data['main_status'] == 'normal':
-				print("Primary: %s %s" % (data['main_norm_val'], data['main_norm_units']))
+			if data["main_status"] == "normal":
+				print("Primary: %s %s" % (data["main_norm_val"], data["main_norm_units"]))
 			else:
 				print("Primary: ----")
-			if data['sec_status'] == 'normal':
-				print("Secondary: %s %s" % (data['sec_norm_val'], data['sec_norm_units']))
+			if data["sec_status"] == "normal":
+				print("Secondary: %s %s" % (data["sec_norm_val"], data["sec_norm_units"]))
 			else:
 				print("Secondary: ----")
 
 	def __del__(self):
-		if hasattr(self, '_ser'):
+		if hasattr(self, "_ser"):
 			self._ser.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	pass
