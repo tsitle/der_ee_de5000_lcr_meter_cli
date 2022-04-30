@@ -14,25 +14,24 @@ PORT = "/dev/ttyUSB0"
 SLEEP_TIME = 1.0
 
 if __name__ == '__main__':
-    print "Starting DE-5000 monitor..."
-    
     try:
         if len(sys.argv) > 1:
             port = sys.argv[1]
         else:
             port = PORT
-            
+
+        print(f"Starting DE-5000 monitor... (port={port})")
         lcr = DE5000(port)
-        
+
         while True:
-            print
-            print datetime.datetime.now()
-            lcr.pretty_print(disp_norm_val=True)
-    
+            print("")
+            print(datetime.datetime.now())
+            lcr.pretty_print(disp_norm_val=False)
+
             time.sleep(SLEEP_TIME)
-    except SerialException:
-        print "Serial port error."
+    except SerialException as err:
+        print("Serial port error: ", err)
     except KeyboardInterrupt:
-        print
-        print "Exiting DE-5000 monitor."
+        print("")
+        print("Exiting DE-5000 monitor.")
         sys.exit()
