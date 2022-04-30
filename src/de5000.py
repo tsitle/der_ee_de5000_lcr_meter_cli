@@ -170,6 +170,8 @@ class DE5000(object):
         self._ser.setRTS(False)
         self._ser.close()
         self._ser.open()
+        self._succCount = 0
+        self._errCount = 0
 
     def read_raw_data(self):
         """ Reads a new data packet from serial port.
@@ -214,15 +216,26 @@ class DE5000(object):
             bool
         """
         # Data length
-        if len(raw_data) != RAW_DATA_LENGTH:
+        tmpSz = len(raw_data)
+        if tmpSz != RAW_DATA_LENGTH:
+            if tmpSz == 0:
+                print("-- no data received")
+            else:
+                print(f"-- len invalid: {tmpSz} != {RAW_DATA_LENGTH}")
             return False
 
         # Start bits
-        if raw_data[0] != 0x00 or raw_data[1] != 0x0D:
+        tmpB1 = 0x00
+        tmpB2 = 0x0D
+        if raw_data[0] != tmpB1 or raw_data[1] != tmpB2:
+            print(f"-- start bits invalid: {raw_data[0]:02X} != {tmpB1:02X} or {raw_data[1]:02X} != {tmpB2:02X}")
             return False
 
         # End bits
-        if raw_data[15] != 0x0D or raw_data[16] != 0x0A:
+        tmpB1 = 0x0D
+        tmpB2 = 0x0A
+        if raw_data[15] != tmpB1 or raw_data[16] != tmpB2:
+            print(f"-- end bits invalid: {raw_data[15]:02X} != {tmpB1:02X} or {raw_data[16]:02X} != {tmpB2:02X}")
             return False
 
         return True
@@ -253,7 +266,9 @@ class DE5000(object):
         # If raw data is empty, return
         if len(raw_data) == 0:
             res['data_valid'] = False
+            self._errCount += 1
             return res
+        self._succCount += 1
 
         # Frequency
         val = raw_data[0x03]
@@ -381,14 +396,14 @@ class DE5000(object):
             val (float)
             units (str)
         Returns:
-            Tuple
+            tuple
         """
         val = val * NORMALIZE_RULES[units][0]
         units = NORMALIZE_RULES[units][1]
         return (val, units)
 
     def pretty_print(self, disp_norm_val = False):
-        """ Prints measurement details in pretty print.
+        """ Prints measurement details in pretty print
 
         Parameters:
             disp_norm_val (bool): if True, normalized values will also be displayed
@@ -396,8 +411,12 @@ class DE5000(object):
         data = self.get_meas()
 
         if data['data_valid'] == False:
-            print("DE-5000 is not connected or data was corrupted.")
+            print(f"DE-5000 is not connected or data was corrupted. (Packets: {self._errCount} invalid, {self._succCount} OK)")
             return
+
+        tmpTotalPacks = self._errCount + self._succCount
+        tmpErrPerc = (self._errCount / tmpTotalPacks) * 100.0
+        print(f"ErrRate: {self._errCount}/{tmpTotalPacks}={tmpErrPerc:.01f}%")
 
         # In calibration mode frequency is not displayed.
         if data['cal_mode']:
