@@ -33,7 +33,7 @@ if __name__ == "__main__":
 			time.sleep(SLEEP_TIME)
 	except SerialException as err:
 		print("Serial port error: ", err)
+		sys.exit(1)
 	except KeyboardInterrupt:
 		print("")
 		print("Exiting DE-5000 monitor.")
-		sys.exit()
