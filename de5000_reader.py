@@ -8,7 +8,7 @@ by TS, Apr 2022
 based on https://github.com/4x1md/de5000_lcr_py by '4x1md'
 """
 
-from de5000 import DE5000
+from tsitle.der_ee_de5000_lcr_meter_uart.de5000_uart import DE5000Uart
 import sys
 import time
 import datetime
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 			port = PORT
 
 		print(f"Starting DE-5000 monitor... (port={port})")
-		lcr = DE5000(port)
+		lcr = DE5000Uart(port)
 
 		while True:
 			print("")
