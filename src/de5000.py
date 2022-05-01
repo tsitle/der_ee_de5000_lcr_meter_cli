@@ -1,15 +1,19 @@
 """
-Created on Sep 15, 2017
+Driver for reading data from the
+  DER EE DE-5000 LCR Meter
+via UART
 
-@author: 4x1md
+by TS, Apr 2022
 
-Serial port settings: 9600 8N1 DTR=1 RTS=0
+based on https://github.com/4x1md/de5000_lcr_py by '4x1md'
 """
 
 import serial
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-# Settings constants
+# Settings constants (Serial port settings: 9600 8N1 DTR=1 RTS=0)
 BAUD_RATE = 9600
 BITS = serial.EIGHTBITS
 PARITY = serial.PARITY_NONE
@@ -139,7 +143,10 @@ MEAS_RES = {
 		"auto_range": False,
 		"parallel": False,
 
-		"data_valid": False
+		"data_valid": False,
+		"packCountOk": 0,
+		"packCountErr": 0,
+		"dbgMsg": ""
 	}
 
 # Normalization constants
@@ -161,6 +168,8 @@ NORMALIZE_RULES = {
 		"deg":  (1, "deg")
 	}
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 class DE5000(object):
 	def __init__(self, port):
@@ -175,85 +184,12 @@ class DE5000(object):
 		self._ser.setRTS(False)
 		self._ser.close()
 		self._ser.open()
-		self._succCount = 0
-		self._errCount = 0
+		self._packCountOk = 0
+		self._packCountErr = 0
+		self._lastDbgMsg = ""
 
-	def read_raw_data(self):
-		""" Reads a new data packet from serial port.
-		If the packet was valid returns array of integers.
-		if the packet was not valid returns empty array.
-
-		In order to get the last reading the input buffer is flushed
-		before reading any data.
-
-		If the first received packet contains less than 17 bytes, it is
-		not complete and the reading is done again. Maximum number of
-		retries is defined by READ_RETRIES value.
-
-		Returns:
-			list: List of bytes
-		"""
-		self._ser.reset_input_buffer()
-
-		retries = 0
-		while retries < READ_RETRIES:
-			# @var raw_data: bytes
-			raw_data = self._ser.read_until(EOL, RAW_DATA_LENGTH)
-			# If 17 bytes were read, the packet is valid and the loop ends.
-			if len(raw_data) == RAW_DATA_LENGTH:
-				break
-			retries += 1
-		res = []
-		# Check data validity
-		if self.is_data_valid(raw_data):
-			res = [c for c in raw_data]
-		return res
-
-	def is_data_valid(self, raw_data):
-		""" Checks data validity:
-			- 17 bytes long
-			- Header bytes 0x00 0x0D
-			- Footer bytes 0x0D 0x0A
-
-		Parameters:
-			raw_data (bytes)
-		Returns:
-			bool
-		"""
-		# Data length
-		tmpSz = len(raw_data)
-		if tmpSz != RAW_DATA_LENGTH:
-			if tmpSz == 0:
-				print("-- no data received")
-			else:
-				print(f"-- len invalid: {tmpSz} != {RAW_DATA_LENGTH}")
-			return False
-
-		# Start bits
-		tmpB1 = 0x00
-		tmpB2 = 0x0D
-		if raw_data[0] != tmpB1 or raw_data[1] != tmpB2:
-			print(f"-- start bits invalid: {raw_data[0]:02X} != {tmpB1:02X} or {raw_data[1]:02X} != {tmpB2:02X}")
-			return False
-
-		# End bits
-		tmpB1 = 0x0D
-		tmpB2 = 0x0A
-		if raw_data[15] != tmpB1 or raw_data[16] != tmpB2:
-			print(f"-- end bits invalid: {raw_data[15]:02X} != {tmpB1:02X} or {raw_data[16]:02X} != {tmpB2:02X}")
-			return False
-
-		return True
-
-	def read_hex_str_data(self):
-		""" Read raw data represented as string with hexadecimal values
-
-		Returns:
-			str
-		"""
-		data = self.read_raw_data()
-		codes = ["0x%02X" % c for c in data]
-		return " ".join(codes)
+	# --------------------------------------------------------------------------
+	# --------------------------------------------------------------------------
 
 	def get_meas(self):
 		""" Get received measurement as dictionary
@@ -261,19 +197,24 @@ class DE5000(object):
 		Returns:
 			dict
 		"""
-		res = MEAS_RES.copy()
-
 		if self._ser.isOpen():
-			raw_data = self.read_raw_data()
+			raw_data = self._read_raw_data()
 		else:
 			raw_data = []
 
+		#
+		res = MEAS_RES.copy()
+		res["packCountOk"] = self._packCountOk
+		res["packCountErr"] = self._packCountErr
+		res["dbgMsg"] = self._lastDbgMsg
+
 		# If raw data is empty, return
 		if len(raw_data) == 0:
-			res["data_valid"] = False
-			self._errCount += 1
+			self._packCountErr += 1
+			res["packCountErr"] += 1
 			return res
-		self._succCount += 1
+		self._packCountOk += 1
+		res["packCountOk"] += 1
 
 		# Frequency
 		val = raw_data[0x03]
@@ -343,7 +284,7 @@ class DE5000(object):
 		res["main_units"] = MAIN_UNITS[val]
 
 		# Normalize value
-		nval = self.normalize_val(res["main_val"], res["main_units"])
+		nval = self._normalize_val(res["main_val"], res["main_units"])
 		res["main_norm_val"] = nval[0]
 		res["main_norm_units"] = nval[1]
 
@@ -380,7 +321,7 @@ class DE5000(object):
 		res["sec_val"] = val
 
 		# Normalize value
-		nval = self.normalize_val(res["sec_val"], res["sec_units"])
+		nval = self._normalize_val(res["sec_val"], res["sec_units"])
 		res["sec_norm_val"] = nval[0]
 		res["sec_norm_units"] = nval[1]
 
@@ -392,7 +333,78 @@ class DE5000(object):
 
 		return res
 
-	def normalize_val(self, val, units):
+	# --------------------------------------------------------------------------
+	# --------------------------------------------------------------------------
+
+	def _read_raw_data(self):
+		""" Reads a new data packet from serial port.
+		If the packet was valid returns array of integers.
+		if the packet was not valid returns empty array.
+
+		In order to get the last reading the input buffer is flushed
+		before reading any data.
+
+		If the first received packet contains less than 17 bytes, it is
+		not complete and the reading is done again. Maximum number of
+		retries is defined by READ_RETRIES value.
+
+		Returns:
+			list: List of bytes
+		"""
+		self._ser.reset_input_buffer()
+
+		retries = 0
+		while retries < READ_RETRIES:
+			# @var raw_data: bytes
+			raw_data = self._ser.read_until(EOL, RAW_DATA_LENGTH)
+			# If 17 bytes were read, the packet is valid and the loop ends.
+			if len(raw_data) == RAW_DATA_LENGTH:
+				break
+			retries += 1
+		res = []
+		# Check data validity
+		if self._is_data_valid(raw_data):
+			res = [c for c in raw_data]
+		return res
+
+	def _is_data_valid(self, raw_data):
+		""" Checks data validity:
+			- 17 bytes long
+			- Header bytes 0x00 0x0D
+			- Footer bytes 0x0D 0x0A
+
+		Parameters:
+			raw_data (bytes)
+		Returns:
+			bool
+		"""
+		self._lastDbgMsg = ""
+		# Data length
+		tmpSz = len(raw_data)
+		if tmpSz != RAW_DATA_LENGTH:
+			if tmpSz == 0:
+				self._lastDbgMsg = "no data received"
+			else:
+				self._lastDbgMsg = f"len invalid: {tmpSz} != {RAW_DATA_LENGTH}"
+			return False
+
+		# Start bits
+		tmpB1 = 0x00
+		tmpB2 = 0x0D
+		if raw_data[0] != tmpB1 or raw_data[1] != tmpB2:
+			self._lastDbgMsg = f"start bits invalid: {raw_data[0]:02X} != {tmpB1:02X} or {raw_data[1]:02X} != {tmpB2:02X}"
+			return False
+
+		# End bits
+		tmpB1 = 0x0D
+		tmpB2 = 0x0A
+		if raw_data[15] != tmpB1 or raw_data[16] != tmpB2:
+			self._lastDbgMsg = f"end bits invalid: {raw_data[15]:02X} != {tmpB1:02X} or {raw_data[16]:02X} != {tmpB2:02X}"
+			return False
+
+		return True
+
+	def _normalize_val(self, val, units):
 		""" Normalizes measured value to standard units. Resistance
 		is normalized to Ohm, capacitance to Farad and inductance
 		to Henry. Other units are not changed.
@@ -407,80 +419,12 @@ class DE5000(object):
 		units = NORMALIZE_RULES[units][1]
 		return (val, units)
 
-	def pretty_print(self, disp_norm_val = False):
-		""" Prints measurement details in pretty print
-
-		Parameters:
-			disp_norm_val (bool): if True, normalized values will also be displayed
-		"""
-		data = self.get_meas()
-
-		if data["data_valid"] == False:
-			print(f"DE-5000 is not connected or data was corrupted. (Packets: {self._errCount} invalid, {self._succCount} OK)")
-			return
-
-		tmpTotalPacks = self._errCount + self._succCount
-		tmpErrPerc = (self._errCount / tmpTotalPacks) * 100.0
-		print(f"ErrRate: {self._errCount}/{tmpTotalPacks}={tmpErrPerc:.01f}%")
-
-		# In calibration mode frequency is not displayed.
-		if data["cal_mode"]:
-			print("Calibration")
-		else:
-			if data["sorting_mode"]:
-				print("SORTING Tol %s" % data["tolerance"])
-			print("Frequency: %s" % data["freq"])
-
-		# LCR autodetection mode
-		if data["lcr_auto"]:
-			print("LCR AUTO")
-
-		# Auto range
-		if data["auto_range"]:
-			print("AUTO RNG")
-
-		# Delta mode parameters
-		if data["delta_mode"]:
-			if data["ref_shown"]:
-				print("DELTA Ref")
-			else:
-				print("DELTA")
-
-		# Main display
-		if data["main_status"] == "normal":
-			print("%s = %s %s" % (data["main_quantity"], data["main_val"], data["main_units"]))
-		elif data["main_status"] == "blank":
-			print("")
-		else:
-			print(data["main_status"])
-
-		# Secondary display
-		if data["sec_status"] == "normal":
-				if data["sec_quantity"] is not None:
-					print("%s = %s %s" % (data["sec_quantity"], data["sec_val"], data["sec_units"]))
-				else:
-					print("%s %s" % (data["sec_val"], data["sec_units"]))
-		elif data["sec_status"] == "blank":
-			print("")
-		else:
-			print(data["sec_status"])
-
-		# Display normalized values
-		# If measurement status is not normal, ---- will be displayed.
-		if disp_norm_val:
-			if data["main_status"] == "normal":
-				print("Primary: %s %s" % (data["main_norm_val"], data["main_norm_units"]))
-			else:
-				print("Primary: ----")
-			if data["sec_status"] == "normal":
-				print("Secondary: %s %s" % (data["sec_norm_val"], data["sec_norm_units"]))
-			else:
-				print("Secondary: ----")
-
 	def __del__(self):
 		if hasattr(self, "_ser"):
 			self._ser.close()
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 if __name__ == "__main__":
 	pass
