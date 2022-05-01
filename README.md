@@ -5,6 +5,44 @@ Python library for reading data from the DER EE DE-5000 LCR meter.
 ![DE-5000](images/de-5000-small.jpg)
 
 
+## Prerequisites
+
+### Installing Python3:
+
+- Debian/Ubuntu
+
+	```
+	$ sudo apt-get install python3 python3-pip
+	```
+- macOS with HomeBrew (tested on macOS 10.14 Mojave)  
+	Install [HomeBrew](https://brew.sh/index_de):
+
+	```
+	$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	```
+
+	Install Python3:
+
+	```
+	$ brew install python3
+	```
+
+### Installing Python package pySerial:
+
+see [pySerial Docs](https://pyserial.readthedocs.io/en/latest/pyserial.html#installation)
+
+- Debian/Ubuntu
+
+	```
+	$ sudo apt-get install python3-serial
+	```
+- macOS
+
+	```
+	$ python3 -m pip install pyserial
+	```
+
+
 ## Connecting to the DE-5000
 
 The LCR meter transmits data via its IR port. You'll either need the original IR-to-USB Adapter or build your own.
