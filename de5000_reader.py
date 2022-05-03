@@ -8,116 +8,124 @@ by TS, Apr 2022
 based on https://github.com/4x1md/de5000_lcr_py by '4x1md'
 """
 
-from tsitle.der_ee_de5000_lcr_meter_uart.de5000_uart import DE5000Uart
+import argparse
 import sys
 import time
 import datetime
 from serial import SerialException
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-
-PORT = "/dev/ttyUSB0"
-SLEEP_TIME = 1.0
+import cli_output
+from tsitle.der_ee_de5000_lcr_meter_uart.de5000_uart import De5000Uart
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-def _pretty_print_meas(data, dispNormVal = False, dispErrRate = False):
-	""" Prints measurement details in pretty print
+OPT_MAX_PACKETS_DEF = 0  # 0 means infinite
 
-	Parameters:
-		data (dict)
-		dispNormVal (bool): if True output normalized values
-		dispErrRate (bool): if True output transmission error rate
-	"""
-	if data["data_valid"] == False:
-		print(f"DE-5000 is not connected or data was corrupted. (Packets: {data['packCountErr']} invalid, {data['packCountOk']} OK)")
-		if data["dbgMsg"]:
-			print(f"  -- {data['dbgMsg']}")
-		return
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-	if dispErrRate:
-		tmpTotalPacks = data["packCountErr"] + data["packCountOk"]
-		tmpErrPerc = (data["packCountErr"] / tmpTotalPacks) * 100.0
-		print(f"ErrRate: {data['packCountErr']}/{tmpTotalPacks}={tmpErrPerc:.01f}%")
+class CliDe5000(object):
+	_SLEEP_TIME = 1.0
 
-	# Calibration Mode
-	if data["cal_mode"]:
-		print("Calibration")
-		return
+	def __init__(self):
+		self._cmdArgs = self._get_parsed_args()
+		self._storeCsvFn = ("" if self._cmdArgs["csv"] is None else self._cmdArgs["csv"])
+		self._csvOutpObj = (None if self._storeCsvFn == "" else cli_output.CsvOutput(self._storeCsvFn, self._debug_msg_cb))
+		self._consoleOutpObj = cli_output.ConsoleOutput(self._debug_msg_cb, self._status_msg_cb)
 
-	# Sorting Mode
-	if data["sorting_mode"]:
-		print("SORTING Tol %s" % data["tolerance"])
+	def read_from_device(self):
+		try:
+			port = self._cmdArgs["COM_PORT"]
+			dispErrorRate = self._cmdArgs["show_error_rate"]
+			#
+			if self._csvOutpObj is not None and not self._csvOutpObj.isOpen:
+				self._csvOutpObj.openCsv()
+			#
+			self._status_msg_cb(f"Starting DE-5000 monitor... (port='{port}')")
+			lcr = De5000Uart(port)
+			#
+			while True:
+				self._status_msg_cb("")
+				# @var packet: De5000StcPacket
+				packet = lcr.get_meas()
+				#
+				if not packet.dataValid:
+					self._error_msg_cb("DE-5000 is not connected or data was corrupted. " +
+							f"(Packets: {packet.packetCountErr} invalid, {packet.packetCountOk} OK)")
+					if packet.dbgMsg:
+						self._error_msg_cb(f"  -- {packet.dbgMsg}")
+				else:
+					self._consoleOutpObj.print_decoded_packet(packet, dispNormVal=True, dispErrorRate=dispErrorRate)
+					if self._csvOutpObj is not None and not packet.calMode:
+						self._csvOutpObj.writeCsvDecodedPacket(packet)
+					if self._cmdArgs["max_packets"] > 0 and packet.packetCountOk >= self._cmdArgs["max_packets"]:
+						self._status_msg_cb("")
+						self._status_msg_cb("Max packets reached. Stopping...")
+						break
+				#
+				time.sleep(self._SLEEP_TIME)
+		except SerialException as err:
+			self._error_msg_cb(f"Serial port error: {str(err)}")
+			sys.exit(1)
+		except KeyboardInterrupt:
+			self._status_msg_cb("KeyboardInterrupt.")
+		finally:
+			if self._csvOutpObj is not None:
+				self._csvOutpObj.closeCsv()
 
-	# Test Frequency
-	print("Frequency: %s" % data["freq"])
+	# --------------------------------------------------------------------------
+	# --------------------------------------------------------------------------
 
-	# LCR Autodetection Mode
-	if data["lcr_auto"]:
-		print("LCR AUTO")
+	def _get_parsed_args(self):
+		parser = argparse.ArgumentParser(
+				formatter_class=argparse.RawDescriptionHelpFormatter,
+				description="Connect to device and continuously print readings",
+				epilog=""
+			)
+		parser.add_argument(
+				"--max-packets",
+				type=int,
+				default=OPT_MAX_PACKETS_DEF,
+				help="Maximum amount of packets to receive (default=%d, 0 means infinite)" % OPT_MAX_PACKETS_DEF
+			)
+		parser.add_argument(
+				"--show-error-rate",
+				action='store_true',
+				help="Enable output of transmission error rate"
+			)
+		parser.add_argument(
+				"--csv",
+				help="Output data to CSV file"
+			)
+		parser.add_argument(
+				"COM_PORT",
+				help="E.g. '/dev/ttyUSB0'"
+			)
+		#
+		args = parser.parse_args()
+		args = vars(args)  # convert into dict
+		#
+		if args["max_packets"] < 0:
+			self._error_msg_cb("! Invalid value for --max-packets (min=0)")
+			sys.exit(1)
+		#
+		if args["csv"] is not None and not args["csv"].endswith(".csv"):
+			args["csv"] += ".csv"
+		return args
 
-	# Auto Range
-	if data["auto_range"]:
-		print("AUTO RNG")
+	def _status_msg_cb(self, msg):
+		print(msg)
 
-	# Delta Mode Parameters
-	if data["delta_mode"]:
-		if data["ref_shown"]:
-			print("DELTA Ref")
-		else:
-			print("DELTA")
+	def _error_msg_cb(self, msg):
+		print(msg, file=sys.stderr)
 
-	# Main Display
-	if data["main_status"] and data["main_status"] != "blank":
-		print("Primary:   ", end="")
-		if data["main_status"] == "normal":
-			print(f"{data['main_quantity']:5s} = ", end="")
-			if dispNormVal:
-				print(f"{data['main_norm_val']:.12f} {data['main_norm_units']}")
-			else:
-				print(f"{data['main_val']:.04f} {data['main_units']}")
-		else:
-			print(f"{data['main_status']}")
-
-	# Secondary Display
-	if data["sec_status"] and data["sec_status"] != "blank":
-		print("Secondary: ", end="")
-		if data["sec_status"] == "normal":
-			if data["sec_quantity"]:
-				print(f"{data['sec_quantity']:5s} = ", end="")
-			if dispNormVal:
-				print(f"{data['sec_norm_val']:.12f} {data['sec_norm_units']}")
-			else:
-				print(f"{data['sec_val']:.04f} {data['sec_units']}")
-		else:
-			print(f"{data['sec_status']}")
+	def _debug_msg_cb(self, msg):
+		print(f"-- {msg}")
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-	try:
-		if len(sys.argv) > 1:
-			port = sys.argv[1]
-		else:
-			port = PORT
-
-		print(f"Starting DE-5000 monitor... (port={port})")
-		lcr = DE5000Uart(port)
-
-		while True:
-			print("")
-			print(datetime.datetime.now())
-			# @var data: dict
-			data = lcr.get_meas()
-			_pretty_print_meas(data, dispNormVal=False, dispErrRate=False)
-
-			time.sleep(SLEEP_TIME)
-	except SerialException as err:
-		print("Serial port error: ", err)
-		sys.exit(1)
-	except KeyboardInterrupt:
-		print("")
-		print("Exiting DE-5000 monitor.")
+	cliObj = CliDe5000()
+	cliObj.read_from_device()
