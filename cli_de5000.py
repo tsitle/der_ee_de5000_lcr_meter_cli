@@ -58,7 +58,7 @@ class CliDe5000(object):
 					if packet.dbgMsg:
 						self._error_msg_cb(f"  -- {packet.dbgMsg}")
 				else:
-					self._consoleOutpObj.print_decoded_packet(packet, dispNormVal=True, dispErrorRate=dispErrorRate)
+					self._consoleOutpObj.print_decoded_packet(packet, dispNormVal=False, dispErrorRate=dispErrorRate)
 					if self._csvOutpObj is not None and not packet.calMode:
 						self._csvOutpObj.writeCsvDecodedPacket(packet)
 					if self._cmdArgs["max_packets"] > 0 and packet.packetCountOk >= self._cmdArgs["max_packets"]:
