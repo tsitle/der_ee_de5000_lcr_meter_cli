@@ -75,6 +75,14 @@ $ python cli_de5000.py --help
 
 ## Output examples
 
+### CSV
+
+[example-capacitor.csv](example-capacitor.csv)  
+[example-inductor.csv](example-inductor.csv)  
+[example-resistor.csv](example-resistor.csv)
+
+### Console
+
 ```
 2022-05-01 15:55:27.372845
 Frequency: 1 KHz
