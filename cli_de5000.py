@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 CLI Application for reading data from the
   DER EE DE-5000 LCR Meter
