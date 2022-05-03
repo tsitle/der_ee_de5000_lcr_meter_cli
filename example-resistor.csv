@@ -1,0 +1,2 @@
+Timestamp UTC,DateTime UTC,Main Quantity,Main L [uH],Main C [uF],Main R [Ohm],Main Overload [bool],Sec Quantity,Sec L [uH],Sec C [uF],Sec R [Ohm],Sec D,Sec Q,Sec Theta [degree],Sec Delta [%],Sec Overload [bool],Freq [Hz],Tolerance,Sorting Passed [bool],Sorting Reference,Delta Reference,is Delta Mode [bool],is Sorting Mode [bool],is LCR Auto Mode [bool],is Auto Range Mode [bool]
+1651592393.132706,2022-05-03 15:39:53.132706,DCR,,,50.280000000,false,,,,,,,,,,0,,,,,false,false,false,false
