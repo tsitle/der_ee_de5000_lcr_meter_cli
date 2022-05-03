@@ -50,15 +50,27 @@ The LCR meter transmits data via its IR port. You'll either need the original IR
 
 ## Running the script
 
-The ```de5000_reader.py``` script is run from command line using the following command:
+The ```cli_de5000.py``` script is run from command line using the following command:
 
 ```
-$ python de5000_reader.py [COM_PORT]
+$ python cli_de5000.py COM_PORT
 ```
 
-where ```[COM_PORT]``` is the name of serial port where your IR receiver is connected.  
+where ```COM_PORT``` is the name of serial port where your IR receiver is connected.  
 Linux: e.g. ```/dev/ttyUSB0```, ```/dev/ttyUSB1```, ...  
 Windows: e.g. ```COM1```, ```COM2```, ...  
+
+To output the data from the meter to a CSV file:
+
+```
+$ python cli_de5000.py --csv FILENAME COM_PORT
+```
+
+To see all available options:
+
+```
+$ python cli_de5000.py --help
+```
 
 
 ## Output examples
