@@ -45,7 +45,8 @@ see [pySerial Docs](https://pyserial.readthedocs.io/en/latest/pyserial.html#inst
 
 ## Connecting to the DE-5000
 
-The LCR meter transmits data via its IR port. You'll either need the original IR-to-USB Adapter or build your own.
+The LCR meter transmits data via its IR port. You'll either need the original IR-to-USB Adapter or build your own.  
+An example for how build your own adapter can be found here: [IR-to-USB Adapter for DER EE DE-5000 LCR Meter](https://tltb.slur97.org/ir-to-usb-adapter-for-der-ee-de-5000-lcr-meter/)
 
 
 ## Running the script
